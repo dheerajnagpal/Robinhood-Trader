@@ -140,7 +140,7 @@ def buy_stock_fractional(stockName,quantity):
 
 
 # Sell the quantity worth of dollars of stockName
-def sellStockFractional(stockName,quantity):
+def sell_stock_fractional(stockName,quantity):
     """Updates the session header used by the requests library.
     :param stockName: The stock to sell.
     :type stockName: str
@@ -178,7 +178,24 @@ def sellStockFractional(stockName,quantity):
 # End Function
 
 
-def getHoldings():
+def get_holdings():
     holdings = rs.build_holdings()
     for key,value in holdings.items():
-        print(key + ": " + value['quantity'])
+        print(f'{key:5}:  {value["quantity"].rjust(13)}')
+    #End For
+# End Function
+
+def is_market_open():
+    now = datetime.now(timeZone)
+    print(f'Current time is : {now}\n')
+    if now.hour < marketStart.hour or (now.hour == marketStart.hour and now.minute < marketStart.minute):
+        # now is before market open
+        return False
+    elif now.hour >= marketEnd.hour :
+        # now is after market close
+        return False
+    else:
+        # market is open
+        return True
+    #end If Else
+# End Fuction
