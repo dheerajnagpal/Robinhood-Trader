@@ -14,6 +14,6 @@ def login():
             expiresIn=86400,
             by_sms=True)
     #End else
-    print(login_ticket)
+    print(f'Login ticket is \n {login_ticket}')
     update_session('Authorization', '{0} {1}'.format(login_ticket['token_type'], login_ticket['access_token']))
 #End login
