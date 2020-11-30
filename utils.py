@@ -1,7 +1,7 @@
 from time import sleep
-from globals import *
+from datetime import datetime
+from globals import RASESSION, timeZone, marketEnd, marketStart, orderRetries
 import robin_stocks as rs
-
 
 def update_session(key, value):
     """Updates the RASESSION header used by the requests library.
@@ -29,7 +29,9 @@ def sell_stock_units(stockName,quantity,price):
     orderAwaiting = True
     count = 0
     orderInfo = {}
-    while orderAwaiting and count < 5 :
+
+    # TODO - Need to use a for loop and remove inline section to a separate function
+    while orderAwaiting and count < orderRetries :
 #        orderStatus = rs.order_sell_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='ask_price')
         orderStatus = rs.order_sell_limit(stockName,quantity,price,timeInForce='gfd',extendedHours=True)
         print(orderStatus)
@@ -38,10 +40,12 @@ def sell_stock_units(stockName,quantity,price):
         orderStatus.raise_for_status()
         orderInfo = orderStatus.json()
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed':
+        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
             orderAwaiting = False
             print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
         else :
+
+            #TODO - use a retry loop that exits if Robinhood keeps the order as unconfirmed for a long time. 
             while orderInfo['state'] == "unconfirmed" :
                 sleep(1)
                 orderStatus = RASESSION.get(orderStatus['url'])
@@ -55,6 +59,7 @@ def sell_stock_units(stockName,quantity,price):
     # End if
     return orderAwaiting
 # End Function
+
 
 # Purchase the quantity worth of dollars of stockName
 def buy_stock_units(stockName,quantity,price):
@@ -70,17 +75,17 @@ def buy_stock_units(stockName,quantity,price):
     orderAwaiting = True
     count = 0
     orderInfo = {}
-    while orderAwaiting and count < 5 :
+    while orderAwaiting and count < orderRetries :
 
 #        orderStatus = rs.order_buy_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='bid_price')
         orderStatus = rs.order_buy_limit(stockName,quantity,price,timeInForce='gfd',extendedHours=True)
-        print(orderStatus)
         sleep(2)
         orderStatus = RASESSION.get(orderStatus['url'])
         orderStatus.raise_for_status()
         orderInfo = orderStatus.json()
+        print(orderInfo)
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed':
+        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
             orderAwaiting = False
             print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
         else :
@@ -111,7 +116,7 @@ def buy_stock_fractional(stockName,quantity):
     orderAwaiting = True
     count = 0
     orderInfo = {}
-    while orderAwaiting and count < 5 :
+    while orderAwaiting and count < orderRetries :
 
         orderStatus = rs.order_buy_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='bid_price')
         print(orderStatus)
@@ -120,7 +125,7 @@ def buy_stock_fractional(stockName,quantity):
         orderStatus.raise_for_status()
         orderInfo = orderStatus.json()
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed':
+        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
             orderAwaiting = False
             print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
         else :
@@ -151,7 +156,7 @@ def sell_stock_fractional(stockName,quantity):
     orderAwaiting = True
     count = 0
     orderInfo = {}
-    while orderAwaiting and count < 5 :
+    while orderAwaiting and count < orderRetries :
         orderStatus = rs.order_sell_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='ask_price')
         print(orderStatus)
         sleep(2)
@@ -159,7 +164,7 @@ def sell_stock_fractional(stockName,quantity):
         orderStatus.raise_for_status()
         orderInfo = orderStatus.json()
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed':
+        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
             orderAwaiting = False
             print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
         else :
