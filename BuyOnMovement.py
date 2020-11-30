@@ -10,10 +10,12 @@
 #
 #
 
-from auth import *
+from auth import login
+import utils as utils
 #from globals import *
 import os
 from time import sleep
+import robin_stocks as rs
 #from utils import *
 
 
@@ -38,9 +40,10 @@ for key in stock_list :
 
 login()
 print('\nCurrent Holdings are')
-get_holdings()
+utils.get_holdings()
 #Newline
 print('\nBeginning Trade Sequence')
+marketOpen = True
 
 while marketOpen == True :
     for stock_name,tradeStatus in stockList.items():
@@ -51,18 +54,18 @@ while marketOpen == True :
         for ctr in range(len(buyThresholds)):
             if last_trade_price/previous_close < buyThresholds[ctr] and tradeStatus[ctr] == True:
                 print(f'Bought {str(buyStockUnits[ctr]):3} stocks of {stock_name}\n')
-                tradeStatus[ctr] = buy_stock_units(stock_name,buyStockUnits[ctr],last_trade_price) 
+                tradeStatus[ctr] = utils.buy_stock_units(stock_name,buyStockUnits[ctr],last_trade_price) 
             # end if
         # End For
 
         for ctr in range(len(sellThresholds)):
             if last_trade_price/previous_close > sellThresholds[ctr] and tradeStatus[ctr] == True:
                 print(f'Sold {str(sellStockUnits[ctr]):3} stocks of {stock_name}\n')
-                tradeStatus[ctr] = sell_stock_units(stock_name,sellStockUnits[ctr],last_trade_price) 
+                tradeStatus[ctr] = utils.sell_stock_units(stock_name,sellStockUnits[ctr],last_trade_price) 
             # End If
         # End For
     #Wait for 5 minutes before running the script again. 
-    sleep(10)
-    marketOpen = is_market_open()
-'''    # End If Else
+    sleep(300)
+    marketOpen = utils.is_market_open()
+    # End If Else
 # End While

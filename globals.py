@@ -7,7 +7,6 @@ from pytz import timezone
 
 
 RASESSION = Session()
-orderRetries = 5
 RASESSION.headers = {
     "Accept": "*/*",
     "Accept-Encoding": "gzip,deflate,br",
@@ -24,7 +23,6 @@ robin_pass = os.environ.get("robin_pass")
 robin_2FA = os.environ.get("robin_2FA")
 
 
-marketOpen = True
 marketStartOffset = "09:30:00" # Time in EST for market open. 
 marketEndOffset = "16:00:00" # Time in EST for Market close
 timeMask = "%H:%M:%S"
@@ -39,5 +37,7 @@ timeZone = timezone('US/Eastern')
 now = datetime.now(timeZone)
 print('Current Time is : ' + str(now))
 
+# Number of times to retry an order that doesn't go through in first try. 
+orderRetries = 5
 
 
