@@ -1,4 +1,6 @@
-from utils import *
+from globals import robin_2FA, robin_pass, robin_user
+import utils as utils
+import robin_stocks as rs
 import pyotp
 
 def login():
@@ -15,5 +17,5 @@ def login():
             by_sms=True)
     #End else
     print(f'Login ticket is \n {login_ticket}')
-    update_session('Authorization', '{0} {1}'.format(login_ticket['token_type'], login_ticket['access_token']))
+    utils.update_session('Authorization', '{0} {1}'.format(login_ticket['token_type'], login_ticket['access_token']))
 #End login
