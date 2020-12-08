@@ -31,12 +31,17 @@ sellThresholds = [1.02, 1.05, 2.0, 2.0, 2.0 ]
 
 
 #Stocks that need to be traded automatically. 
-stock_list = ['SCHB','SPYV','SCHM','MDYV','SCHA','SLYV','VEA','SCHC','VYMI','USRT','VNQI','SPEM','GE','ABBV','INTC','XLC','IETC']
+stock_list = ['ABBV','BAC','GE','IETC','INTC','MDYV','SCHA','SCHB','SCHC','SCHM','SLYV','SPEM','SPYV','USRT','VEA','VNQI','VYMI','XLC']
 stockList = {}
 
 for key in stock_list :
-    stockList[key]=[True,True,True,True,True]
+#    stockList[key]=[True,True,True,True,True]
+#    print(f'{key:5} :{stockList[key]}')
+    for key2 in range(len(buyThresholds)):
+        stockList.setdefault(key,[]).append(True)
     print(f'{key:5} :{stockList[key]}')
+
+
 
 login()
 print('\nCurrent Holdings are')
