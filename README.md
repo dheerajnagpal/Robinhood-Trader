@@ -2,6 +2,9 @@
 
 Code for algorithmic trading in Robinhood. 
 
+Please note, this is a test strategy to demonstrate how automated transaction can be done on Robinhood. This is not a strategy recommendation. A good possibility is that this strategy would lose money
+
+
 The following items are required for the code to function.
 
 ## Prerequisites
