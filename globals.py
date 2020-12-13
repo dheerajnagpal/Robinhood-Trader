@@ -5,7 +5,14 @@ from datetime import datetime
 from pytz import timezone
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("debug.log"),
+        logging.StreamHandler()
+    ]
+)
 
 #This is the name of Robinhood watchlist that contains the stocks to trade for movement
 listName = 'Movement_Trades'
