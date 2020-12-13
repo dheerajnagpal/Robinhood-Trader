@@ -3,6 +3,15 @@ import utils as utils
 import robin_stocks as rs
 import pyotp
 
+'''
+ # Logs into the Robinhood account. Doesn't take any parameters but utilizes the environment variables defined
+ # in globals to get username, password and TOTP seed. If totp is blank, tries to log in with username and password
+ # if a usernae or password are missing, they are asked for in the console. 
+ # 
+ # Additionally, sets the session headers in Utils for RASSION to run direct commands against Robinhood API 
+ 
+ '''
+
 def login():
     if robin_2FA != "" :
         robinOTP = pyotp.TOTP(robin_2FA).now()

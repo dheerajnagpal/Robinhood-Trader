@@ -3,7 +3,12 @@ import os
 from requests import Session
 from datetime import datetime
 from pytz import timezone
+import logging
 
+logging.basicConfig(level=logging.INFO)
+
+#This is the name of Robinhood watchlist that contains the stocks to trade for movement
+listName = 'Movement_Trades'
 
 
 RASESSION = Session()
@@ -35,7 +40,8 @@ timeZone = timezone('US/Eastern')
 
 #Show the current time in US Eastern Timezone
 now = datetime.now(timeZone)
-print('Current Time is : ' + str(now))
+logging.debug('Current time is: %s', str(now))
+#print('Current Time is : ' + str(now))
 
 # Number of times to retry an order that doesn't go through in first try. 
 orderRetries = 5
