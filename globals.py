@@ -5,12 +5,19 @@ from datetime import datetime
 from pytz import timezone
 import logging
 
+# Get a separate stream handler to configure separately than File Level
+console = logging.StreamHandler()
+
+#Setting console logging at INFO. This has to be same or higher level than basic config below
+console.setLevel(logging.INFO)
+
+#Setting the base logging level to DEBUG for file hander and INFO for console takes over. Add console and file handlers
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.FileHandler("debug.log"),
-        logging.StreamHandler()
+        console
     ]
 )
 
@@ -28,6 +35,7 @@ RASESSION.headers = {
     "Connection": "keep-alive",
     "User-Agent": "*"
 }
+
 
 #Set the environment variable to robinhood username and password. 
 robin_user = os.environ.get("robin_user")
