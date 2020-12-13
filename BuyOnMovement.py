@@ -6,7 +6,8 @@
 # $robin_pass - password for the robinhood user
 # $robin_2FA - 2 FA code for the 2FA for the user. If no 2FA, leave blank. 
 #
-#
+# In your robinhood account, create a watchlist called "Movement_Trades" that will store the stocks that you want it to trade automatically
+# To change the name of the list, go to global.py
 #
 #
 
@@ -16,7 +17,7 @@ import globals as globals
 import os
 from time import sleep
 import robin_stocks as rs
-
+import logging
 
 # For purchase, only first three values are being used. Hence, last two threshold are 0 i.e. if stock price becomes 0, then only buy last two items.
 buyStockUnits = [1, 2, 3, 0, 0]
@@ -30,23 +31,19 @@ sellThresholds = [1.02, 1.05, 2.0, 2.0, 2.0 ]
 
 login()
 
-#Stocks that need to be traded automatically. 
-# stock_list = ['ABBV','BAC','GE','IETC','INTC','MDYV','SCHA','SCHB','SCHC','SCHM','SLYV','SPEM','SPYV','USRT','VEA','VNQI','VYMI','XLC']
+#Stocks that need to be traded automatically are in the list name in globals. 
 stock_list = utils.build_stocklist(globals.listName)
 stockList = {}
 
 for key in stock_list :
-#    stockList[key]=[True,True,True,True,True]
-#    print(f'{key:5} :{stockList[key]}')
     for key2 in range(len(buyThresholds)):
         stockList.setdefault(key,[]).append(True)
-    print(f'{key:5} :{stockList[key]}')
+    logging.info(f'{key:5} :{stockList[key]}')
 
 
-print('\nCurrent Holdings are')
+logging.info('\nCurrent Holdings are')
 utils.get_holdings()
-#Newline
-print('\nBeginning Trade Sequence')
+logging.info('\nBeginning Trade Sequence')
 marketOpen = True
 
 while marketOpen == True :
@@ -54,12 +51,12 @@ while marketOpen == True :
         quote = rs.stocks.get_quotes(stock_name)
         last_trade_price = float(quote[0]['last_trade_price'])
         previous_close = float(quote[0]['previous_close'])
-        print(f'{stock_name.rjust(5)}: Last trade price is {last_trade_price:10.3f} and previous close was {previous_close:10.3f}')
+        logging.info(f'{stock_name.rjust(5)}: Last trade price is {last_trade_price:10.3f} and previous close was {previous_close:10.3f}')
         for ctr in range(len(buyThresholds)):
             if last_trade_price/previous_close < buyThresholds[ctr] and tradeStatus[ctr] == True:
                 tradeConf = utils.buy_stock_units(stock_name,buyStockUnits[ctr],last_trade_price) 
                 if tradeConf == True :
-                    print(f'Bought {str(buyStockUnits[ctr]):3} stocks of {stock_name}\n')
+                    logging.info(f'Bought {str(buyStockUnits[ctr]):3} stocks of {stock_name}\n')
                     tradeStatus[ctr] = False
                 # End If
             # End if
@@ -69,7 +66,7 @@ while marketOpen == True :
             if last_trade_price/previous_close > sellThresholds[ctr] and tradeStatus[ctr] == True:
                 tradeConf = utils.sell_stock_units(stock_name,sellStockUnits[ctr],last_trade_price) 
                 if tradeConf == True :
-                    print(f'Sold {str(sellStockUnits[ctr]):3} stocks of {stock_name}\n')
+                    logging.info(f'Sold {str(sellStockUnits[ctr]):3} stocks of {stock_name}\n')
                     tradeStatus[ctr] = False
                 # End If
             # End If

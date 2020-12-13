@@ -2,6 +2,7 @@ from globals import robin_2FA, robin_pass, robin_user
 import utils as utils
 import robin_stocks as rs
 import pyotp
+import logging
 
 '''
  # Logs into the Robinhood account. Doesn't take any parameters but utilizes the environment variables defined
@@ -25,6 +26,6 @@ def login():
             expiresIn=86400,
             by_sms=True)
     #End else
-    print(f'Login ticket is \n {login_ticket}')
+    logging.debug(f'Login ticket is \n {login_ticket}')
     utils.update_session('Authorization', '{0} {1}'.format(login_ticket['token_type'], login_ticket['access_token']))
 #End login

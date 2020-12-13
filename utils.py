@@ -212,7 +212,7 @@ def get_holdings():
 def is_market_open():
  
     now = datetime.now(timeZone)
-    print(f'Current time is : {now}\n')
+    logging.info(f'Current time is : {now}\n')
     if now.hour < marketStart.hour or (now.hour == marketStart.hour and now.minute < marketStart.minute):
         # now is before market open
         return False

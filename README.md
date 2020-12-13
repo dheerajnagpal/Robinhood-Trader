@@ -14,6 +14,12 @@ The following items are required for the code to function.
 - Install robin_stocks. ```pip install robin_stocks```
 - Install pytz. ```pip install pytz```
 
+## Robinhood account changes
+- Watchlist named "Movement_Trades" 
+    - In your robinhood account, create a watchlist called "Movement_Trades" that will store the stocks that you want it to trade automatically
+    - To change the name of the list, change it in global.py
+
+
 ## Configuration
 
-Modify the buyOnMovement.py file to set the number of stocks to buy and thresholds at which to buy. There are 5 thresholds and corresponding number of stocks. Only 3 are in use, hence others are set at 0
+- Modify the buyOnMovement.py file to set the number of stocks to buy and thresholds at which to buy. There are 5 thresholds and corresponding number of stocks. Only 3 are in use, hence others are set at 0
