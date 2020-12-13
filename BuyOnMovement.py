@@ -12,11 +12,10 @@
 
 from auth import login
 import utils as utils
-#from globals import *
+import globals as globals
 import os
 from time import sleep
 import robin_stocks as rs
-#from utils import *
 
 
 # For purchase, only first three values are being used. Hence, last two threshold are 0 i.e. if stock price becomes 0, then only buy last two items.
@@ -29,9 +28,11 @@ sellStockUnits = [1, 3, 0, 0, 0]
 sellStockDollars = [50, 150, 0, 0, 0]
 sellThresholds = [1.02, 1.05, 2.0, 2.0, 2.0 ]
 
+login()
 
 #Stocks that need to be traded automatically. 
-stock_list = ['ABBV','BAC','GE','IETC','INTC','MDYV','SCHA','SCHB','SCHC','SCHM','SLYV','SPEM','SPYV','USRT','VEA','VNQI','VYMI','XLC']
+# stock_list = ['ABBV','BAC','GE','IETC','INTC','MDYV','SCHA','SCHB','SCHC','SCHM','SLYV','SPEM','SPYV','USRT','VEA','VNQI','VYMI','XLC']
+stock_list = utils.build_stocklist(globals.listName)
 stockList = {}
 
 for key in stock_list :
@@ -42,8 +43,6 @@ for key in stock_list :
     print(f'{key:5} :{stockList[key]}')
 
 
-
-login()
 print('\nCurrent Holdings are')
 utils.get_holdings()
 #Newline
@@ -58,15 +57,21 @@ while marketOpen == True :
         print(f'{stock_name.rjust(5)}: Last trade price is {last_trade_price:10.3f} and previous close was {previous_close:10.3f}')
         for ctr in range(len(buyThresholds)):
             if last_trade_price/previous_close < buyThresholds[ctr] and tradeStatus[ctr] == True:
-                print(f'Bought {str(buyStockUnits[ctr]):3} stocks of {stock_name}\n')
-                tradeStatus[ctr] = utils.buy_stock_units(stock_name,buyStockUnits[ctr],last_trade_price) 
-            # end if
+                tradeConf = utils.buy_stock_units(stock_name,buyStockUnits[ctr],last_trade_price) 
+                if tradeConf == True :
+                    print(f'Bought {str(buyStockUnits[ctr]):3} stocks of {stock_name}\n')
+                    tradeStatus[ctr] = False
+                # End If
+            # End if
         # End For
 
         for ctr in range(len(sellThresholds)):
             if last_trade_price/previous_close > sellThresholds[ctr] and tradeStatus[ctr] == True:
-                print(f'Sold {str(sellStockUnits[ctr]):3} stocks of {stock_name}\n')
-                tradeStatus[ctr] = utils.sell_stock_units(stock_name,sellStockUnits[ctr],last_trade_price) 
+                tradeConf = utils.sell_stock_units(stock_name,sellStockUnits[ctr],last_trade_price) 
+                if tradeConf == True :
+                    print(f'Sold {str(sellStockUnits[ctr]):3} stocks of {stock_name}\n')
+                    tradeStatus[ctr] = False
+                # End If
             # End If
         # End For
     #Wait for 5 minutes before running the script again. 

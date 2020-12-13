@@ -2,195 +2,215 @@ from time import sleep
 from datetime import datetime
 from globals import RASESSION, timeZone, marketEnd, marketStart, orderRetries
 import robin_stocks as rs
+import logging
 
-def update_session(key, value):
-    """Updates the RASESSION header used by the requests library.
-    :param key: The key value to update or add to session header.
-    :type key: str
-    :param value: The value that corresponds to the key.
-    :type value: str
-    :returns: None. Updates the session header with a value.
-    """
+
+'''
+# Updates the RASESSION header to be used by utils library. 
+
+# @param  {String} key  -  key to udpate in the session header
+# @param {string} value - corresponding value to add to key
+
+# @return  none - Updates the session header with the key,value pair
+
+''' 
+def update_session(key, value) :
+
     RASESSION.headers[key] = value
+# End function
 
 
+'''
+# Fetches the status of order from a given order url. Uses RASESSION to send the session data to Robinhood.
+# If order stays unconfirmed for long, it sends a false though order may confirm after some time. This should 
+# not happen in normal circumstances at robinhood but there is always a system overload
 
-# Sell the quantity worth of dollars of stockName
+# @param  {String} url  -  url of the stock transaction
+
+# @return  {Boolean} - If transaction completed or not
+
+''' 
+def order_status(url):
+
+    orderInfo = RASESSION.get(url)
+    orderInfo.raise_for_status()
+    orderStatus = {}
+    orderStatus = orderInfo.json()
+    if orderStatus['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled':
+        logging.info(f'Order placed for {url}')
+        return True
+    else :
+        count = 0
+        while orderStatus['state'] == "unconfirmed" & count < 5 :
+            sleep(1)
+            count = count + 1
+            orderInfo = RASESSION.get(url)
+            orderInfo.raise_for_status()
+            orderStatus = orderInfo.json()
+        # End of while
+        if orderStatus['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled':
+            logging.info(f'Order placed for {url}')
+            return True
+        # End of If
+        logging.warning(f'Order is placed but not yet confirmed. Order may confirm later and result in multiple offers\n \
+        Validate online for status. Order details are: \n {orderStatus}')
+        return False
+    # End of If
+# End of Function
+
+
+'''
+# Sells the given quantity of stockname at price. It then waits for 2 seconds, and checks for the order status 
+# if the order is submitted, returns true. If not submitted, or is unconfirmed, tries 5 times to submit
+# There is one issue though. If the order stays unconfirmed for over 10 seconds at Robinhood, then the order gets placed
+# again and may result in multiple orders if Robinhood is extremely slow on a given day. This can be controlled by changing
+# orderRetries to 1 in globals.
+
+# @param  {String} stockName  -  Stock symbol to sell
+# @param  {int} quantity - number of stocks to transact.
+# @param  {float} price - price at which to transact
+
+# @return  {Boolean} - If transaction complete or not
+
+''' 
 def sell_stock_units(stockName,quantity,price):
-    """Sell the requested quantity of stockName
-    :param stockName: The stock to sell.
-    :type stockName: str
-    :param quantity: number of units of stockName to sell. Will not sell anything if more units are being sold than in acount. 
-    :type quantity: int
-    :param price: Price at which to sell the stocks
-    :type price: float
-    :returns: Boolean. True or false depending on if stock sold. Sells the stock and outputs the status. Robinhood has in built-in checks to not sell if you don't own a stock 
-    """    
-    orderAwaiting = True
-    count = 0
-    orderInfo = {}
 
-    # TODO - Need to use a for loop and remove inline section to a separate function
-    while orderAwaiting and count < orderRetries :
-#        orderStatus = rs.order_sell_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='ask_price')
+    count = 0
+    stockOrdered = False
+    while stockOrdered == False and count < orderRetries :
         orderStatus = rs.order_sell_limit(stockName,quantity,price,timeInForce='gfd',extendedHours=True)
-        print(orderStatus)
+        logging.debug(f'Order Status is {orderStatus}')
         sleep(2)
-        orderStatus = RASESSION.get(orderStatus['url'])
-        orderStatus.raise_for_status()
-        orderInfo = orderStatus.json()
+        stockOrdered = order_status(orderStatus['url'])
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
-            orderAwaiting = False
-            print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
-        else :
-
-            #TODO - use a retry loop that exits if Robinhood keeps the order as unconfirmed for a long time. 
-            while orderInfo['state'] == "unconfirmed" :
-                sleep(1)
-                orderStatus = RASESSION.get(orderStatus['url'])
-                orderStatus.raise_for_status()
-                orderInfo = orderStatus.json()
-            # end while
-        # end else
-    # end while
-    if orderAwaiting :
-        print("Max retries reached, order not placed")
-    # End if
-    return orderAwaiting
-# End Function
+    # End of While
+    if stockOrdered == False :
+        logging.info(f'Order not placed. Maximum retries reached')
+    # End of If
+    return stockOrdered
+#End of Function
 
 
-# Purchase the quantity worth of dollars of stockName
+
+
+'''
+# Buys the given quantity of stockname at price. It then waits for 2 seconds, and checks for the order status 
+# if the order is submitted, returns true. If not submitted, or is unconfirmed, tries 5 times to submit
+# There is one issue though. If the order stays unconfirmed for over 10 seconds at Robinhood, then the order gets placed
+# again and may result in multiple orders if Robinhood is extremely slow on a given day. This can be controlled by changing
+# orderRetries to 1 in globals.
+
+# @param  {String} stockName  -  Stock symbol to buy
+# @param  {int} quantity - number of stocks to transact.
+# @param  {float} price - price at which to transact
+
+# @return  {Boolean} - If transaction complete or not
+
+''' 
 def buy_stock_units(stockName,quantity,price):
-    """Purchase the quantity of stockName at price. 
-    :param stockName: The stock to purchase.
-    :type stockName: str
-    :param quantity: Amount of $ worth of stocks to purchase
-    :type quantity: int
-    :param price: Price at which to buy the stocks
-    :type price: float
-    :returns: Boolean - Value whether stock purchased or not
-    """
-    orderAwaiting = True
     count = 0
-    orderInfo = {}
-    while orderAwaiting and count < orderRetries :
-
-#        orderStatus = rs.order_buy_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='bid_price')
+    stockOrdered = False
+    while stockOrdered == False and count < orderRetries :
         orderStatus = rs.order_buy_limit(stockName,quantity,price,timeInForce='gfd',extendedHours=True)
+        logging.debug(f'Order Status is {orderStatus}')
         sleep(2)
-        orderStatus = RASESSION.get(orderStatus['url'])
-        orderStatus.raise_for_status()
-        orderInfo = orderStatus.json()
-        print(orderInfo)
+        stockOrdered = order_status(orderStatus['url'])
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
-            orderAwaiting = False
-            print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
-        else :
-            while orderInfo['state'] == "unconfirmed" :
-                sleep(1)
-                orderStatus = RASESSION.get(orderStatus['url'])
-                orderStatus.raise_for_status()
-                orderInfo = orderStatus.json()
-            # end while
-        # end else
-    # end while
-    if orderAwaiting :
-        print("Max retries reached, order not placed")
-    # end if
-    return orderAwaiting
-# End Function
+    # End of While
+    if stockOrdered == False :
+        logging.info(f'Order not placed. Maximum retries reached')
+    # End of If
+    return stockOrdered
+#End of Function
 
 
-# Purchase the quantity worth of dollars of stockName
+
+'''
+# Buys the given dollars of stockname. This buys fractional stocks. It then waits for 2 seconds, and checks for the order status 
+# if the order is submitted, returns true. If not submitted, or is unconfirmed, tries 5 times to submit
+# There is one issue though. If the order stays unconfirmed for over 10 seconds at Robinhood, then the order gets placed
+# again and may result in multiple orders if Robinhood is extremely slow on a given day. This can be controlled by changing
+# orderRetries to 1 in globals.
+
+# @param  {String} stockName  -  Stock symbol to buy
+# @param  {int} quantity - Dollar value of stock to buy
+
+# @return  {Boolean} - If transaction complete or not
+
+'''     
 def buy_stock_fractional(stockName,quantity):
-    """Updates the session header used by the requests library.
-    :param stockName: The stock to purchase.
-    :type stockName: str
-    :param quantity: Amount of $ worth of stocks to purchase
-    :type quantity: int
-    :returns: None. Purchases the stock and outputs the status.
-    """
-    orderAwaiting = True
     count = 0
-    orderInfo = {}
-    while orderAwaiting and count < orderRetries :
-
+    stockOrdered = False
+    while stockOrdered == False and count < orderRetries :
         orderStatus = rs.order_buy_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='bid_price')
-        print(orderStatus)
+        logging.debug(f'Order Status is {orderStatus}')
         sleep(2)
-        orderStatus = RASESSION.get(orderStatus['url'])
-        orderStatus.raise_for_status()
-        orderInfo = orderStatus.json()
+        stockOrdered = order_status(orderStatus['url'])
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
-            orderAwaiting = False
-            print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
-        else :
-            while orderInfo['state'] == "unconfirmed" :
-                sleep(1)
-                orderStatus = RASESSION.get(orderStatus['url'])
-                orderStatus.raise_for_status()
-                orderInfo = orderStatus.json()
-            # end while
-        # end else
-    # end while
-    if orderAwaiting :
-        print("Max retries reached, order not placed")
-    # end if
-    return orderAwaiting
-# End Function
+    # End of While
+    if stockOrdered == False :
+        logging.info(f'Order not placed. Maximum retries reached')
+    # End of If
+    return stockOrdered
+#End of Function
 
 
-# Sell the quantity worth of dollars of stockName
+
+'''
+# Sells the given dollars of stockname. This sells fractional stocks. It then waits for 2 seconds, and checks for the order status 
+# if the order is submitted, returns true. If not submitted, or is unconfirmed, tries 5 times to submit
+# There is one issue though. If the order stays unconfirmed for over 10 seconds at Robinhood, then the order gets placed
+# again and may result in multiple orders if Robinhood is extremely slow on a given day. This can be controlled by changing
+# orderRetries to 1 in globals.
+
+# @param  {String} stockName  -  Stock symbol to sell
+# @param  {int} quantity - Dollar value of stock to sell.
+
+# @return  {Boolean} - If transaction complete or not
+
+''' 
 def sell_stock_fractional(stockName,quantity):
-    """Updates the session header used by the requests library.
-    :param stockName: The stock to sell.
-    :type stockName: str
-    :param quantity: Amount of $ worth of stocks to sell
-    :type quantity: int
-    :returns: None. Sales the stock and outputs the status. Robinhood has in built-in checks to not sell if you don't own a stock 
-    """    
-    orderAwaiting = True
     count = 0
-    orderInfo = {}
-    while orderAwaiting and count < orderRetries :
+    stockOrdered = False
+    while stockOrdered == False and count < orderRetries :
         orderStatus = rs.order_sell_fractional_by_price(stockName,quantity,timeInForce='gfd',priceType='ask_price')
-        print(orderStatus)
+        logging.debug(f'Order Status is {orderStatus}')
         sleep(2)
-        orderStatus = RASESSION.get(orderStatus['url'])
-        orderStatus.raise_for_status()
-        orderInfo = orderStatus.json()
+        stockOrdered = order_status(orderStatus['url'])
         count = count + 1
-        if orderInfo['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled' :
-            orderAwaiting = False
-            print("Order Placed for :" + str(stockName) + " at price of : " + str(quantity) )
-        else :
-            while orderInfo['state'] == "unconfirmed" :
-                sleep(1)
-                orderStatus = RASESSION.get(orderStatus['url'])
-                orderStatus.raise_for_status()
-                orderInfo = orderStatus.json()
-            # end while
-        # end else
-    # end while
-    if orderAwaiting :
-        print("Max retries reached, order not placed")
-    # End if
-    return orderAwaiting
-# End Function
+    # End of While
+    if stockOrdered == False :
+        logging.info(f'Order not placed. Maximum retries reached')
+    # End of If
+    return stockOrdered
+#End of Function
 
 
+'''
+# lists the current holdings of the stocks. 
+# TODO - Return the current holdings value
+
+'''  
 def get_holdings():
     holdings = rs.build_holdings()
+    holdingValues = {}
+    logging.info(f' Stock        Quantity')
     for key,value in holdings.items():
-        print(f'{key:5}:  {value["quantity"].rjust(13)}')
+        logging.info(f' {key:5}:  {value["quantity"].rjust(13)}')
+        holdingValues.setdefault(key,[]).append(value['quantity'])
+    return holdingValues
     #End For
 # End Function
 
+
+'''
+# returns if market is open or not
+
+# @return  {Boolean} - If market is open or not
+
+'''  
 def is_market_open():
+ 
     now = datetime.now(timeZone)
     print(f'Current time is : {now}\n')
     if now.hour < marketStart.hour or (now.hour == marketStart.hour and now.minute < marketStart.minute):
@@ -204,3 +224,23 @@ def is_market_open():
         return True
     #end If Else
 # End Fuction
+
+
+'''
+# returns the list of stocks in a given watchlist as a list.
+
+# @param {string} listname - Name of watchlist to fetch stocks from. 
+# @return  {list} - list of symbols in the watchlist
+
+''' 
+def build_stocklist(listName) :
+
+    stockListItems = rs.get_watchlist_by_name(listName)
+    stockList = []
+    for item in stockListItems['results'] :
+        stockList.append(item['symbol'])
+    # End For
+    logging.debug(f'The stock list items are :\n {stockList}')
+    return stockList
+# End Function
+ 
