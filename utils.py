@@ -36,7 +36,7 @@ def order_status(url):
     orderInfo.raise_for_status()
     orderStatus = {}
     orderStatus = orderInfo.json()
-    if orderStatus['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled':
+    if orderStatus['state'] == 'queued' or orderStatus['state'] == 'confirmed' or orderStatus['state'] == 'filled':
         logging.info(f'Order placed for {url}')
         return True
     else :
@@ -48,7 +48,7 @@ def order_status(url):
             orderInfo.raise_for_status()
             orderStatus = orderInfo.json()
         # End of while
-        if orderStatus['state'] == 'queued' or orderInfo['state'] == 'confirmed' or orderInfo['state'] == 'filled':
+        if orderStatus['state'] == 'queued' or orderStatus['state'] == 'confirmed' or orderStatus['state'] == 'filled':
             logging.info(f'Order placed for {url}')
             return True
         # End of If

@@ -41,8 +41,8 @@ for key in stock_list :
     logging.info(f'{key:5} :{stockList[key]}')
 
 
-logging.info('\nCurrent Holdings are')
-utils.get_holdings()
+#logging.info('\nCurrent Holdings are')
+#utils.get_holdings()
 logging.info('\nBeginning Trade Sequence')
 marketOpen = True
 
