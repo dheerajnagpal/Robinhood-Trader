@@ -21,8 +21,9 @@ logging.basicConfig(
     ]
 )
 
-#This is the name of Robinhood watchlist that contains the stocks to trade for movement
-listName = 'Movement_Trades'
+
+
+
 
 
 RASESSION = Session()
@@ -45,11 +46,13 @@ robin_2FA = os.environ.get("robin_2FA")
 
 marketStartOffset = "09:30:00" # Time in EST for market open. 
 marketEndOffset = "16:00:00" # Time in EST for Market close
+extMarketEndOffset = "18:00:00" # Time in EST for Extended market close
 timeMask = "%H:%M:%S"
 
 #Market Start time
 marketStart = datetime.strptime(marketStartOffset,timeMask) # convert to time object and get the start time
 marketEnd = datetime.strptime(marketEndOffset,timeMask) # convert to time object and get close time.
+extMarketEnd = datetime.strptime(extMarketEndOffset,timeMask) #Convert to time object and get close time
 # All transactions are going to happen in US East timezone. 
 timeZone = timezone('US/Eastern')
 
