@@ -13,26 +13,28 @@
 
 from auth import login
 import utils as utils
-import globals as globals
 import os
 from time import sleep
 import robin_stocks as rs
 import logging
 
 # For purchase, only first three values are being used. Hence, last two threshold are 0 i.e. if stock price becomes 0, then only buy last two items.
-buyStockUnits = [1, 2, 3, 0, 0]
-buyStockDollars = [50, 100, 150, 0, 0]
-buyThresholds = [0.99, 0.98, 0.95, 0, 0]
+buyStockUnits = [1, 2, 3, 5, 0]
+buyStockDollars = [50, 100, 150, 250, 0]
+buyThresholds = [0.99, 0.98, 0.95, 0.9, 0]
 
 # For sell, only first two values are being used. Hence, last three threshold are 2 i.e. if stock price becomes double, then only sell last three items (which are 0).
-sellStockUnits = [1, 3, 0, 0, 0]
+sellStockUnits = [1, 2, 3, 5, 0]
 sellStockDollars = [50, 150, 0, 0, 0]
-sellThresholds = [1.02, 1.05, 2.0, 2.0, 2.0 ]
+sellThresholds = [1.015, 1.025, 1.05, 1.1, 2.0 ]
+
+#This is the name of Robinhood watchlist that contains the stocks to trade for movement
+listName = 'Movement_Trades'
 
 login()
 
-#Stocks that need to be traded automatically are in the list name in globals. 
-stock_list = utils.build_stocklist(globals.listName)
+#Stocks that need to be traded automatically are in the listName. 
+stock_list = utils.build_stocklist(listName)
 stockList = {}
 
 for key in stock_list :
@@ -40,11 +42,12 @@ for key in stock_list :
         stockList.setdefault(key,[]).append(True)
     logging.info(f'{key:5} :{stockList[key]}')
 
-
+market_open = rs.get_market_today_hours('XNAS') # Is NYSE Open Today?
+print(market_open['is_open'])
 #logging.info('\nCurrent Holdings are')
 #utils.get_holdings()
 logging.info('\nBeginning Trade Sequence')
-marketOpen = True
+marketOpen = bool(market_open['is_open']) # If market is open today, run the following loop.
 
 while marketOpen == True :
     for stock_name,tradeStatus in stockList.items():
