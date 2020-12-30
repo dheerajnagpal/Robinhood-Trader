@@ -1,6 +1,6 @@
 from time import sleep
 from datetime import datetime
-from globals import RASESSION, timeZone, marketEnd, marketStart, orderRetries
+from globals import RASESSION, timeZone, marketEnd, marketStart, orderRetries, extMarketEnd
 import robin_stocks as rs
 import logging
 
@@ -41,7 +41,7 @@ def order_status(url):
         return True
     else :
         count = 0
-        while orderStatus['state'] == "unconfirmed" & count < 5 :
+        while orderStatus['state'] == "unconfirmed" and count < 5 :
             sleep(1)
             count = count + 1
             orderInfo = RASESSION.get(url)
@@ -80,7 +80,7 @@ def sell_stock_units(stockName,quantity,price):
     while stockOrdered == False and count < orderRetries :
         orderStatus = rs.order_sell_limit(stockName,quantity,price,timeInForce='gfd',extendedHours=True)
         logging.debug(f'Order Status is {orderStatus}')
-        sleep(2)
+        sleep(1)
         stockOrdered = order_status(orderStatus['url'])
         count = count + 1
     # End of While
@@ -227,6 +227,30 @@ def is_market_open():
 
 
 '''
+# returns if market is in extended market or not
+
+# @return  {Boolean} - If market is in extended market. It returns false if Market is open in regular time
+
+'''  
+def is_extended_market():
+ 
+    now = datetime.now(timeZone)
+    logging.info(f'Current time is : {now}\n')
+    if (now.hour == marketStart.hour and now.minute < marketStart.minute):
+        # now is extended market before market open
+        return True
+    elif now.hour >= marketEnd.hour and now.hour < extMarketEnd.hour :
+        # now is extended market after market close
+        return True
+    else:
+        # market is not in extended zone
+        return False
+    #end If Else
+# End Fuction
+
+
+
+'''
 # returns the list of stocks in a given watchlist as a list.
 
 # @param {string} listname - Name of watchlist to fetch stocks from. 
@@ -244,3 +268,66 @@ def build_stocklist(listName) :
     return stockList
 # End Function
  
+
+ 
+'''
+# Sells the given quantity of stockname at price and sets a good till cancel order. 
+# 
+# 
+#   
+# @param  {String} stockName  -  Stock symbol to sell
+# @param  {int} quantity - number of stocks to transact.
+# @param  {float} price - price at which to transact
+
+# @return  {Boolean} - If transaction complete or not
+
+''' 
+def sell_stock_gtc(stockName,quantity,price):
+
+    count = 0
+    stockOrdered = False
+    while stockOrdered == False and count < orderRetries :
+        orderStatus = rs.order_sell_limit(stockName,quantity,price,timeInForce='gtc',extendedHours=True)
+        logging.debug(f'Order Status is {orderStatus}')
+        sleep(1)
+        stockOrdered = order_status(orderStatus['url'])
+        count = count + 1
+    # End of While
+    if stockOrdered == False :
+        logging.info(f'Order not placed. Maximum retries reached')
+    # End of If
+    return stockOrdered
+#End of Function
+
+
+
+
+'''
+# Buys the given quantity of stockname at price and sets a good till cancel order. 
+# 
+# 
+# 
+# 
+
+# @param  {String} stockName  -  Stock symbol to buy
+# @param  {int} quantity - number of stocks to transact.
+# @param  {float} price - price at which to transact
+
+# @return  {Boolean} - If transaction complete or not
+
+''' 
+def buy_stock_gtc(stockName,quantity,price):
+    count = 0
+    stockOrdered = False
+    while stockOrdered == False and count < orderRetries :
+        orderStatus = rs.order_buy_limit(stockName,quantity,price,timeInForce='gtc',extendedHours=True)
+        logging.debug(f'Order Status is {orderStatus}')
+        sleep(1)
+        stockOrdered = order_status(orderStatus['url'])
+        count = count + 1
+    # End of While
+    if stockOrdered == False :
+        logging.info(f'Order not placed. Maximum retries reached')
+    # End of If
+    return stockOrdered
+#End of Function
