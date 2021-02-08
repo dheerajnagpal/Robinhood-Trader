@@ -45,7 +45,6 @@ with open("StockData.json", 'r') as stockDataFileReader:
 for stock in stockList:
     logging.debug(f'{stock}')
     stockData = stockDataHistorical[stock] # Get the stock data dictionary from the item in stocklist
-#    logging.info(stockData[-1])
     priorDateStr = stockData[-1]['date']
     priorDate = datetime.strptime(priorDateStr,"%Y-%m-%dT%H:%M:%SZ")
     logging.info(priorDate)
@@ -65,12 +64,10 @@ for stock in stockList:
             unit['ema'+str(emaDuration2)] = float(currentEMA2)
             priorEMA1 = float(currentEMA1)
             priorEMA2 = float(currentEMA2)       
-#        logging.info(unit)
             stockData.append(unit)
-#        stockData.setdefault(stock,[]).append(unit)
-    logging.info(stockData)
+    logging.debug(stockData)
     stockDataHistorical[stock] = stockData
 
-logging.info(stockDataHistorical)
+logging.debug(stockDataHistorical)
 stockDataFile = open("StockData.json", 'w')
 stockDataFile.write(json.dumps(stockDataHistorical, indent=4))
