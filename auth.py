@@ -1,6 +1,6 @@
 from globals import robin_2FA, robin_pass, robin_user
 import utils as utils
-import robin_stocks as rs
+import robin_stocks.robinhood as rs
 import pyotp
 import logging
 
@@ -29,3 +29,7 @@ def login():
     logging.debug(f'Login ticket is \n {login_ticket}')
     utils.update_session('Authorization', '{0} {1}'.format(login_ticket['token_type'], login_ticket['access_token']))
 #End login
+
+#Unit test to log in
+#print(login())
+

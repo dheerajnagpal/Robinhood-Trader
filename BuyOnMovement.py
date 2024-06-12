@@ -15,8 +15,9 @@ from auth import login
 import utils as utils
 import os
 from time import sleep
-import robin_stocks as rs
+import robin_stocks.robinhood as rs
 import logging
+from datetime import date
 
 # For purchase, only first three values are being used. Hence, last two threshold are 0 i.e. if stock price becomes 0, then only buy last two items.
 buyStockUnits = [1, 2, 3, 5, 0]
@@ -42,7 +43,9 @@ for key in stock_list :
         stockList.setdefault(key,[]).append(True)
     logging.info(f'{key:5} :{stockList[key]}')
 
-market_open = rs.get_market_today_hours('XNAS') # Is NYSE Open Today?
+#market_open = rs.get_market_today_hours('XNAS') # This broke and started sending false for today
+
+market_open = rs.get_market_hours("XNAS",date.today())  # Is NYSE Open Today?
 print(market_open['is_open'])
 #logging.info('\nCurrent Holdings are')
 #utils.get_holdings()
@@ -79,3 +82,4 @@ while marketOpen == True :
     marketOpen = utils.is_market_open()
     # End If Else
 # End While
+

@@ -1,7 +1,7 @@
 from time import sleep
 from datetime import datetime
 from globals import RASESSION, timeZone, marketEnd, marketStart, orderRetries, extMarketEnd
-import robin_stocks as rs
+import robin_stocks.robinhood as rs
 import logging
 
 
@@ -111,7 +111,8 @@ def buy_stock_units(stockName,quantity,price):
     count = 0
     stockOrdered = False
     while stockOrdered == False and count < orderRetries :
-        orderStatus = rs.order_buy_limit(stockName,quantity,price,timeInForce='gfd',extendedHours=True)
+        #orderStatus = rs.order_buy_limit(symbol=stockName,quantity=quantity,limitPrice=price,timeInForce='gfd',extendedHours=True) Broken due to a bug
+        orderStatus = rs.order_buy_market(stockName,quantity,timeInForce="gfd",extendedHours="False")
         logging.debug(f'Order Status is {orderStatus}')
         sleep(2)
         stockOrdered = order_status(orderStatus['url'])
